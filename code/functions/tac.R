@@ -202,6 +202,12 @@ tac.baseline <- function(){
     dplyr::select(p_holder, p_fshy, area, port, deli, season, days=tday, t, 
                   sd.t, day, sd.day, sim, C1, C2, C3, prob)  
 }  
+tac.state.ecs <- function(){
+  tac.state() %>% 
+  group_by(season, sim, port) %>% 
+  mutate(n = n(), C1 = C1/n,  C2 = C2/n, C3 = C3/n) %>% 
+  dplyr::select(-n)
+}
 sim.season <- function(x) { 
   x <- split(x, c(x$sim)) 
   x <- sapply(x, function(x) split(x, x$season))
@@ -210,3 +216,7 @@ sim.season <- function(x) {
 sim.season.port <- function(x){
   split(x, interaction(x$port, x$season, x$sim), drop = TRUE)
 }
+sim.season.p_holder <- function(x){
+  split(x, interaction(x$season, x$sim, x$p_holder), drop = TRUE)
+}
+
