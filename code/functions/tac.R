@@ -118,7 +118,9 @@ tac.port.all <- function(){
            C2 = ifelse(area==2, (C2 * perc_catch), NA),
            C3 = ifelse(area==3, (C3 * perc_catch), NA)) %>% 
     dplyr::select(-perc_catch, -area) %>% 
-    ungroup %>% 
+    ungroup -> tac
+  
+  tac %>% 
     filter(!is.na(C1))  %>% 
     mutate(C2 = filter(tac, !is.na(C2))$C2,
            C3 = filter(tac, !is.na(C3))$C3) %>% 
@@ -156,11 +158,13 @@ tac.port.fed <- function(){
            C2 = ifelse(area==2, (C2 * perc_catch), NA),
            C3 = ifelse(area==3, (C3 * perc_catch), NA)) %>% 
     dplyr::select(-perc_catch, -area) %>% 
-    ungroup %>% 
+    ungroup -> tac
+  
+  tac %>% 
     filter(!is.na(C1), p_fshy>1)  %>% 
     mutate(C2 = filter(tac, !is.na(C2))$C2,
            C3 = filter(tac, !is.na(C3))$C3) %>% 
-    left_join(f.boats()) %>% 
+    left_join(f.boats_large()) %>% 
     left_join(f.trip_behavior()) %>% 
     filter(sim >20) %>% 
     mutate(deli = port, area = if_else(port==1, 1, 3)) %>% 
