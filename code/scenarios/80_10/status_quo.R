@@ -1,3 +1,5 @@
+# status quo parallel fishery for simulations 1-20
+
 source('code/functions/model.R')
 
 # Define world ----
@@ -9,3 +11,12 @@ x <- sim.season(x)
 status_quo <- f.itall(x)
 
 write_csv(status_quo, "output/80_10/status_quo_80_10.csv")
+
+f.rev(status_quo, 0.12, 0.7) %>% 
+  group_by(sim, d) %>% 
+  summarise(rev = sum(n_rev/1000000)) %>% 
+  group_by(d) %>% 
+  mutate(mean = mean(rev)) %>% 
+  ggplot(aes(sim, rev, color=factor(d))) + geom_point() + 
+  geom_line(aes(sim, mean, color=factor(d)), lty=4) + 
+  expand_limits(x = 0, y = 0)
