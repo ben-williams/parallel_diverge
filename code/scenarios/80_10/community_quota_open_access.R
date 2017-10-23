@@ -1,3 +1,7 @@
+# scenario  for community quota in federal waters only, with open access
+# in state waters
+# all vessels included aka parallel fishery
+
 source('code/functions/model.R')
 
 # Define world ----
