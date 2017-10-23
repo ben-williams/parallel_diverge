@@ -33,6 +33,11 @@ app %>%
   group_by(area, season) %>% 
   summarise(app = mean(app)) -> app # for alternative model
 
+# ABC is set at 100,000
+abc.state <- data.frame(abc = rep(50000 * 0.25, 150), sim = 1:150)
+abc.fed <- data.frame(abc = rep(50000 * 0.75, 150), sim = 1:150)
+abc <- data.frame(abc = rep(50000, 150), sim = 1:150)
+
 # create a data.frame of vessel sizes, ports, and season for simulating complete data sets
 all.boat <- expand.grid(p_fshy = 1:4, port=1:4, season=1:4, area = 1:3) # dataframe for making a complete grid
 
