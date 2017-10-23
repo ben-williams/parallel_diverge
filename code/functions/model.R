@@ -1,0 +1,6 @@
+source('code/helper.R')
+source('code/gridsearch.R')
+source('code/search_patterns.R')
+source('code/tacs.R')
+source('code/simulation.R')
+source('code/cleanup.R')
