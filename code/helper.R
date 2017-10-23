@@ -17,12 +17,21 @@ library(scales)
 library(splitstackshape)
 library(MASS)
 library(EnvStats)
+library(gridExtra)
 options(digits=4)
 options(scipen=999)
 
 # data ----
-Catch <- read_csv('chapter_3/data/Catch.csv') # Simulated TAC data
-pol <- read_csv('chapter_3/data/pol.csv') # CFEC data
+Catch <- read_csv('data/Catch.csv') # Simulated TAC data
+pol <- read_csv('data/pol.csv') # CFEC data
+
+app <- read_csv('data/apportion.csv')
+
+# Calculate distributions by area and season
+app %>%
+  filter(area!=640) %>%  
+  group_by(area, season) %>% 
+  summarise(app = mean(app)) -> app # for alternative model
 
 # create a data.frame of vessel sizes, ports, and season for simulating complete data sets
 all.boat <- expand.grid(p_fshy = 1:4, port=1:4, season=1:4, area = 1:3) # dataframe for making a complete grid
