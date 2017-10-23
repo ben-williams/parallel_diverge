@@ -14,5 +14,5 @@
 - [ ] llp - community quota  
 
 # scenario matchup - bounding cases
-- [ ] ifq [ ] open access
-- [ ] ifq [ ] llp - equal catch-shares
+- [ ] ifq - [ ] open access
+- [ ] ifq - [ ] llp - equal catch-shares
