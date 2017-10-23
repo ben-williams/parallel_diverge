@@ -86,7 +86,7 @@ f.port_allocation <- function(x){
                        yday = min(startdt)) %>% 
                 group_by(p_fshy, season, port, p_holder) %>% 
                 mutate(tt = sum(t)) %>% 
-                filter(tt>1, p_fshy>1) %>%
+                filter(tt>1) %>%
                 group_by(season, port, year, area) %>% 
                 summarise(catch = sum(t)) %>% 
                 group_by(season, year, area) %>% 
