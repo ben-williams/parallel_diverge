@@ -208,6 +208,8 @@ f.itall <- function(x){
   x = filter(x, size<9)
   x
 }
+
+# equal ctach shares - state waters - small vessels
 fun.reps.ecs <- function(x){
   
   f.search_all <- function(x){
