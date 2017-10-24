@@ -208,3 +208,77 @@ f.itall <- function(x){
   x = filter(x, size<9)
   x
 }
+fun.reps.ecs <- function(x){
+  
+  f.search_all <- function(x){
+    s = if(c1<C1 && c2<C2 && c3<C3 && x[17]<x[7]){
+      f.a123(x)
+    } else if(c1<C1 && c2<C2 && c3>=C3 && x[17]<x[7]){
+      f.a12(x)
+    } else if(c1<C1 && c2>=C2 && c3>=C3 && x[17]<x[7]){
+      f.a1(x)
+    } else if(c1>=C1 && c2<C2 && c3>=C3 && x[17]<x[7]){
+      f.a2(x)
+    } else if(c1>=C1 && c2>=C2 && c3<C3 && x[17]<x[7]){
+      f.a3(x)
+    } else if(c1<C1 && c2>=C2 && c3<C3 && x[17]<x[7]){
+      f.a13(x)
+    } else if(c1>=C1 && c2<C2 && c3<C3 && x[17]<x[7]){
+      f.a23(x)
+    } else if(x[17]>=x[7]){
+      c(9,1,1,1)
+    } else{c(9,1,1,1)}
+    names(s) <- c('p_fshy', 'area', 'port', 'deli')
+    s
+  }
+  
+  
+  l = replicate(nrow(x),vector('list',83)) # storage list
+  x = f.sim(x) # function (uses dplyr code to calculate a suite of variables)
+  
+  # add data to storage list
+  for(i in 1:nrow(x)){
+    l[[1,i]] = x[i,]
+  }
+  
+  # basic control levels - reduce levels so don't "overfish"
+  C1 = if(x[1,14]<100) {x[1,13] * 0.65} else {x[1,13] * 0.95}   # limit value
+  C2 = if(x[1,15]<100) {x[1,14] * 0.85} else {x[1,14] * 0.95}  # limit value
+  C3 = if(x[1,16]<100) {x[1,15] * 0.85} else {x[1,15] * 0.95}  # limit value
+  
+  c1 = sum(x[,18]) # control value
+  c2 = sum(x[,19]) # control value
+  c3 = sum(x[,20]) # control value
+  
+  y = x[,5:17] # store descriptor values
+  s = as.data.frame(t(apply(x,1,f.search_all))) # function to run a grid search based upon the limit and controls
+  x = bind_cols(s,y) # create a whole dataset
+  
+  
+  for(j in 2:83){
+    x = f.sim2(x) # run the second trip function (same as 1st just updates # of days)
+    
+    # add data to  storagelist
+    for(i in 1:nrow(x)){ 
+      l[[j,i]]=x[i,]
+    }
+    c1 = sum(x[,18]) + c1 # control value update
+    c2 = sum(x[,19]) + c2 # control value update
+    c3 = sum(x[,20]) + c3 # control value update
+    y = x[,5:17] # store descriptor values
+    
+    s = as.data.frame(t(apply(x,1,f.search_all))) # gridsearch
+    x = bind_cols(s,y)
+    if(x[1]==9) break
+  }
+  l
+}
+f.itall.ecs <- function(x){
+  x = lapply(x, fun.reps.ecs)
+  x = lapply(x, f.docall)
+  x = do.call(bind_rows,x)
+  names(x) = c('size', 'area', 'p', 'd', 'p_holder', 'season','days','sim', 't', 'sd.t',
+               'day','sd.day', 'C1','C2', 'C3','prob', 'n', 'c1', 'c2', 'c3', 'trip', 'catch')
+  x = filter(x, size<9)
+  x
+}
