@@ -209,6 +209,29 @@ tac.state.ecs <- function(){
   mutate(n = n(), C1 = C1/n,  C2 = C2/n, C3 = C3/n) %>% 
   dplyr::select(-n)
 }
+tac.state.sx <- function(){
+  app %>% 
+    ungroup %>% 
+    mutate(area = case_when(area==610 ~ 3,
+                            area==620 ~ 2,
+                            area==630 ~ 1),
+           season = case_when(season == 'a' ~ 1,
+                              season == 'b' ~ 2, 
+                              season == 'c' ~ 3,
+                              season == 'd' ~ 4)) %>% 
+    merge(abc.state, by=NULL) %>% 
+    mutate(tac = app/100 * abc,
+           C1 = ifelse(area==1, tac, 0),
+           C2 = ifelse(area==2, tac, 0),
+           C3 = ifelse(area==3, tac, 0)) %>% 
+    dplyr::select(-app, -abc, -tac)   %>%  
+    left_join(f.boats_small_sx()) %>%
+    left_join(f.trip_behavior_sx()) %>%  
+    filter(sim >20, p_fshy==1) %>% 
+    mutate(deli = port) %>% 
+    dplyr::select(p_holder, p_fshy, area, port, deli, season, days=tday, t, 
+                  sd.t, day, sd.day, sim, C1, C2, C3, prob) 
+}
 
 # break into appropriate lists for simulations
 sim.season <- function(x) { 
