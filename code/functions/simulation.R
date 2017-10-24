@@ -11,7 +11,6 @@ f.boats <- function(){
     summarise(port = round(mean(port))) %>% 
     arrange(season, port, p_fshy) 
 }
-
 f.boats_small <- function(){
   pol %>% 
     group_by(p_fshy, port, season, p_holder, year) %>% 
@@ -25,7 +24,19 @@ f.boats_small <- function(){
     summarise(port = round(mean(port))) %>% 
     arrange(season, port, p_fshy) 
 }
-
+f.boats_small_sx <- function(){
+  pol %>% 
+    group_by(p_fshy, port, season, p_holder, year) %>% 
+    mutate(t = sum(ton) / n(),
+           yday = min(startdt)) %>% 
+    group_by(p_fshy, season, port, p_holder) %>% 
+    mutate(tt = sum(t)) %>% 
+    filter(tt>1, p_fshy==1) %>%
+    ungroup %>% 
+    group_by(p_fshy, season, p_holder) %>% 
+    summarise(port = round(mean(port)), area = round(mean(area))) %>% 
+    arrange(season, port, p_fshy) 
+}
 f.boats_large <- function(){
   pol %>% 
     group_by(p_fshy, port, season, p_holder, year) %>% 
@@ -37,8 +48,10 @@ f.boats_large <- function(){
     ungroup %>% 
     group_by(p_fshy, season, p_holder) %>% 
     summarise(port = round(mean(port))) %>% 
-    arrange(season, port, p_fshy) %>% ungroup%>% data.frame()
+    arrange(season, port, p_fshy)  
 }
+
+
 f.trip_behavior <- function(){
   pol %>% 
     filter(p_holder %in% unique(f.boats()$p_holder)) %>% 
@@ -76,7 +89,110 @@ f.trip_behavior <- function(){
            prob = ifelse(is.na(prob), 0, if_else(prob>1, 1, prob))) %>% 
     dplyr::select(-c(nat, nasdt, naday, natrips, nasdday, trips)) 
 }
-
+f.trip_behavior_sx <- function(){
+  # fleet behavior for small vessels only - 
+  # each vessel is assigned a port/area by season dependent upon the 
+  # max number of deliveries for each season/port/area
+  pol %>% 
+    filter(p_holder %in% unique(f.boats_small_sx()$p_holder)) %>% 
+    group_by(p_holder, season, year, p_fshy) %>% 
+    summarise(t = sum(ton) / n(), # ton of catch
+              sd.t = sd(ton / n()), 
+              trips = n(), # number of trips
+              day = round(as.numeric(mean(time))) + 1, 
+              sd.day = as.numeric(sd(time)), 
+              tday = mean(days),
+              prob = trips * day / tday) %>% 
+    group_by(season, p_holder, p_fshy) %>% 
+    summarise(t = mean(t), 
+              sd.t = max(sd.t), 
+              day = mean(day),
+              trips=round(mean(trips)), # number of trips
+              sd.day = mean(sd.day),
+              tday = mean(tday),
+              prob = mean(prob)) %>% 
+    mutate(nat = mean(t, na.rm = TRUE),
+           nasdt = mean(sd.t, na.rm = TRUE),
+           naday = mean(day, na.rm = TRUE),
+           natrips = mean(trips, na.rm = TRUE),
+           nasdday = mean(sd.day, na.rm = TRUE)) %>% 
+    mutate(t = ifelse(is.na(t), nat, t),
+           sd.t = if_else(p_fshy==1, 3, 10),
+           day = ifelse(is.na(day), naday, day),
+           trips = ifelse(is.na(trips), natrips, trips),
+           sd.day = ifelse(is.na(sd.day), nasdday, sd.day),
+           sd.day = if_else(is.na(sd.day) | sd.day<1, 1.01,sd.day),
+           tday = case_when(season == 1 ~ 51,
+                            season == 2 ~ 83,
+                            season == 3 ~ 38,
+                            season == 4 ~ 32),
+           prob = ifelse(is.na(prob), 0, if_else(prob>1, 1, prob))) %>% 
+    dplyr::select(-c(nat, nasdt, naday, natrips, nasdday, trips)) 
+}
+f.trip_behavior_ifq <- function(){
+  # determine who gets to fish & how much
+  pol %>% 
+    filter(p_holder %in% unique(f.boats_large()$p_holder)) %>% 
+    group_by(port, p_holder, season, area, year) %>% 
+    summarise(t = max(ton)) %>% 
+    filter(t>100) %>% 
+    dplyr::select(-year) %>% 
+    ungroup() %>% 
+    group_by(p_holder, season, area) %>% 
+    summarise(t = mean(t)) %>% 
+    group_by(season, area) %>% 
+    mutate(tt = sum(t), perc = t/tt) -> allocation 
+  
+  p_holders <- unique(allocation$p_holder) # vector of vessels that have IFQ
+  
+  pol %>% 
+    filter(p_holder %in% p_holders) %>% 
+    dplyr::select(p_fshy, p_holder) %>% 
+    distinct() %>% 
+    left_join(allocation) %>% 
+    arrange(p_holder) -> allocation
+  
+  # combine the vessels with TAC allocation and simulated TAC
+  Catch %>% 
+    mutate(area=a) %>% 
+    left_join(allocation) %>% 
+    dplyr::select(a, season, sim, iFed, perc, p_holder, area, p_fshy) %>% 
+    mutate(tac = iFed * perc,
+           C1 = ifelse(area==1, tac, NA),
+           C2 = ifelse(area==2, tac, NA),
+           C3 = ifelse(area==3, tac, NA)) %>% 
+    dplyr::select(-tac, -perc, -a) %>% 
+    mutate_all(funs(replace(., is.na(.), 0))) %>% 
+    arrange(sim, p_holder) -> aa
+  
+  pol %>% 
+    filter(p_fshy>1) %>% 
+    left_join(allocation) %>% 
+    filter(p_holder %in% p_holders) %>% 
+    group_by(p_fshy, port, season, area) %>% 
+    summarise(t = sum(ton)/n(), 
+              sd.t = sd(ton/n()) , # add some variance to the trip catch
+              day = round(as.numeric(mean(time))) + 1, 
+              # add a to account for 1 day trips
+              sd.day = as.numeric(sd(time, na.rm=T)) , 
+              tday = mean(days)) %>% # number of days in the season
+    left_join(aa) %>% 
+    filter(!is.na(sim)) %>% 
+    ungroup() %>% 
+    mutate(prob=1, 
+           deli=port,
+           id = 1:n(), 
+           sd.day = ifelse(sd.day<=1 | is.na(sd.day), 1.1, sd.day),
+           sd.t = ifelse(sd.t<=1 | is.na(sd.t), 15, sd.t)) %>% 
+    # if have ifq probability of fishing is 1 
+    dplyr::select(p_fshy, area, port, deli, season, days=tday, 
+                  prob, t, sd.t,day, sd.day, sim, abc=p_holder, 
+                  C1, C2, C3, id) -> x
+  # change abc to p_holder simply to fit the data structure
+  
+  x = split(x, c(x$id))
+  x
+}
 f.port_allocation <- function(x){
   all.boat %>% 
     dplyr::select(-p_fshy) %>% 
@@ -209,6 +325,7 @@ f.itall <- function(x){
   x
 }
 
+# ECS ----
 # equal ctach shares - state waters - small vessels
 fun.reps.ecs <- function(x){
   
@@ -284,3 +401,72 @@ f.itall.ecs <- function(x){
   x = filter(x, size<9)
   x
 }
+
+# superX ----
+# equal ctach shares - state waters - small vessels
+fun.reps.sx <- function(x){
+  
+  
+  f.search_sx <- function(x){
+    s = if(x[2]==1 && c1<C1 && x[17]<x[7]){
+      f.ase(x)
+    } else if(x[2]==2 && c2<C2 && x[17]<x[7]){
+      f.ase(x)
+    } else if(x[2]==3 && c3<C3 && x[17]<x[7]){
+      f.ase(x)
+    } else if(x[17]>=x[7]){
+      c(9,1,1,1)
+    } else{c(9,1,1,1)}
+    names(s) <- c('p_fshy', 'area', 'port', 'deli')
+    s
+  }
+  
+  l = replicate(nrow(x),vector('list',83)) # storage list
+  x = f.sim(x) # function (uses dplyr code to calculate a suite of variables)
+  
+  # add data to storage list
+  for(i in 1:nrow(x)){
+    l[[1,i]] = x[i,]
+  }
+  
+  C1 = as.numeric(x[1,13]) * 0.90  # limit value
+  C2 = as.numeric(x[1,14]) * 0.90  # limit value
+  C3 = as.numeric(x[1,15]) * 0.70  # limit value
+  
+  c1 = sum(x[,18]) # control value
+  c2 = sum(x[,19]) # control value
+  c3 = sum(x[,20]) # control value
+  
+  y = x[,5:17] # store descriptor values
+  s = as.data.frame(t(apply(x,1,f.search_sx))) # function to run a grid search based upon the limit and controls
+  x = bind_cols(s,y) # create a whole dataset
+  
+  
+  for(j in 2:83){
+    x = f.sim2(x) # run the second trip function (same as 1st just updates # of days)
+    
+    # add data to  storagelist
+    for(i in 1:nrow(x)){ 
+      l[[j,i]]=x[i,]
+    }
+    c1 = sum(x[,18]) + c1 # control value update
+    c2 = sum(x[,19]) + c2 # control value update
+    c3 = sum(x[,20]) + c3 # control value update
+    y = x[,5:17] # store descriptor values
+    
+    s = as.data.frame(t(apply(x,1,f.search_sx))) # gridsearch
+    x = bind_cols(s,y)
+    if(x[1]==9) break
+  }
+  l
+}
+f.itall.sx <- function(x){
+  x = lapply(x, fun.reps.sx)
+  x = lapply(x, f.docall)
+  x = do.call(bind_rows,x)
+  names(x) = c('size', 'area', 'p', 'd', 'p_holder', 'season','days','sim', 't', 'sd.t',
+               'day','sd.day', 'C1','C2', 'C3','prob', 'n', 'c1', 'c2', 'c3', 'trip', 'catch')
+  x = filter(x, size<9)
+  x
+}
+
