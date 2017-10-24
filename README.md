@@ -6,9 +6,9 @@
     - [ ] open-access
     - [ ] llp - equal catch-shares
 - [ ] community quota allocation
-    - [ ] open-access
-    - [ ] llp - small vessel  
-    - [ ] llp - super exclusive 
+    - [x] open-access
+    - [x] llp - small vessel  
+    - [x] llp - super exclusive 
 - [ ] llp w/co-operatives
     - [ ] open-access
     - [ ] llp - small vessel  
