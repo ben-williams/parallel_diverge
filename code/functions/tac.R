@@ -1,3 +1,4 @@
+# tac levels by state, fed, port, ecs, ifq
 tac.state <- function(){
   app %>% 
     ungroup %>% 
@@ -208,6 +209,8 @@ tac.state.ecs <- function(){
   mutate(n = n(), C1 = C1/n,  C2 = C2/n, C3 = C3/n) %>% 
   dplyr::select(-n)
 }
+
+# break into appropriate lists for simulations
 sim.season <- function(x) { 
   x <- split(x, c(x$sim)) 
   x <- sapply(x, function(x) split(x, x$season))
