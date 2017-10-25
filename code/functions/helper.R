@@ -97,7 +97,7 @@ f.check.individual <- function(x){
           #                ifelse(key=="c2" & key2=="C2", catch, 
           #                       ifelse(key=='c3' & key2=='C3', catch, NA))),
            Port = factor(d)) %>% 
-    ggplot(aes(TAC, catch, color=Port)) + geom_jitter(width=1) + geom_abline(slope=1, lty=4)
+    ggplot(aes(TAC, catch, color=Port)) + geom_jitter(width=10) + geom_abline(slope=1, lty=4)
 }
 
 
