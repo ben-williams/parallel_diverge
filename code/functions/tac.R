@@ -124,7 +124,10 @@ tac.port.all <- function(){
   tac %>% 
     filter(!is.na(C1))  %>% 
     mutate(C2 = filter(tac, !is.na(C2))$C2,
-           C3 = filter(tac, !is.na(C3))$C3) %>% 
+           C3 = filter(tac, !is.na(C3))$C3,
+           C1 = ifelse(C1<50, 0, C1),
+           C2 = ifelse(C2<50, 0, C2),
+           C3 = ifelse(C3<50, 0, C3)) %>% 
     left_join(f.boats()) %>% 
     left_join(f.trip_behavior()) %>% 
     filter(sim >20) %>% 
@@ -157,17 +160,20 @@ tac.port.fed <- function(){
     left_join(f.port_allocation()) %>% 
     mutate(C1 = ifelse(area==1, C1 * perc_catch, NA),
            C2 = ifelse(area==2, (C2 * perc_catch), NA),
-           C3 = ifelse(area==3, (C3 * perc_catch), NA)) %>% 
+           C3 = ifelse(area==3, (C3 * perc_catch), NA),
+           C1 = ifelse(C1<50, 0, C1),
+           C2 = ifelse(C2<50, 0, C2),
+           C3 = ifelse(C3<50, 0, C3)) %>% 
     dplyr::select(-perc_catch, -area) %>% 
     ungroup -> tac
   
   tac %>% 
-    filter(!is.na(C1), p_fshy>1)  %>% 
+    filter(!is.na(C1))  %>% 
     mutate(C2 = filter(tac, !is.na(C2))$C2,
            C3 = filter(tac, !is.na(C3))$C3) %>% 
     left_join(f.boats_large()) %>% 
     left_join(f.trip_behavior()) %>% 
-    filter(sim >20) %>% 
+    filter(sim >20, p_fshy>1) %>% 
     mutate(deli = port, area = if_else(port==1, 1, 3)) %>% 
     dplyr::select(p_holder, p_fshy, area, port, deli, season, days=tday, t, 
                   sd.t, day, sd.day, sim, C1, C2, C3, prob) 
