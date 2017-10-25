@@ -64,6 +64,26 @@ f.check <- function(x){
     ggplot(aes(TAC, catch, color=Area)) + geom_point() + geom_abline(slope=1, lty=4)
 }
 
+f.check.port <- function(x){
+  x %>% 
+    group_by(season, d, sim) %>% 
+    summarise(c1 = sum(c1), C1=mean(C1),
+              c2 = sum(c2), C2=mean(C2),
+              c3 = sum(c3), C3=mean(C3)) %>%
+    # mutate(c1 = ifelse(area==1, c1, NA),
+    #        c2 = ifelse(area==2, c2, NA),
+    #        c3 = ifelse(area==3, c3, NA)) %>% 
+    gather(key, catch, -season, -d, -sim, -C1, -C2, -C3) %>% 
+    gather(key2, TAC, -season, -d, -key, -catch, -sim) %>% 
+    mutate(catch = ifelse(key=='c1' & key2=='C1', catch, 
+                          ifelse(key=="c2" & key2=="C2", catch, 
+                                 ifelse(key=='c3' & key2=='C3', catch, NA))),
+           Port = factor(d)) %>% 
+    ggplot(aes(TAC, catch, color=Port)) + geom_point() + geom_abline(slope=1, lty=4)
+}
+
+
+
 f.simcheck <- function(x, a){
   x %>% 
     group_by(sim, season, d) %>% 
