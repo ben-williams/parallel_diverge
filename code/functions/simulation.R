@@ -223,9 +223,10 @@ f.sim <- function(x){
     rowwise() %>%
     mutate(go = rbinom(1, 1, prob),
            trip = if_else(go==1, rtruncnorm(1,0,7,day,sd.day), 0),
-           catch = if_else(p_fshy==1, 
-                           rlnormTrunc(1,log(t), log(sd.t), 0, 140),
-                           rtruncnorm(1, 0, 140, t, sd.t)),
+           catch = if_else(trip==0, 0, 
+                           ifelse(p_fshy==1, 
+                           rlnormTrunc(1, log(t), log(sd.t), 0, 140),
+                           rtruncnorm(1, 0, 140, t, sd.t))),
            
            n = if(trip==0) {1} else {trip},
            c1 = if(area==1) {catch} else {0},
@@ -239,10 +240,10 @@ f.sim2 <- function(x){
     rowwise() %>%
     mutate(go = rbinom(1, 1, prob),
            trip = if_else(go==1, rtruncnorm(1,0,7,day,sd.day), 0),
-           trip = rtruncnorm(1,0,7,day,sd.day),
-           catch = if_else(p_fshy==1, 
-                           rlnormTrunc(1,log(t), log(sd.t), 0, 140),
-                           rtruncnorm(1, 0, 140, t, sd.t)),
+           catch = if_else(trip==0, 0, 
+                           ifelse(p_fshy==1, 
+                                  rlnormTrunc(1, log(t), log(sd.t), 0, 140),
+                                  rtruncnorm(1, 0, 140, t, sd.t))),
            n = if_else(trip==0, n + 1, trip + n),
            c1 = if(area==1) {catch} else {0},
            c2 = if(area==2) {catch} else {0},
