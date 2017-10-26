@@ -471,3 +471,128 @@ f.itall.sx <- function(x){
   x
 }
 
+# PSC ----
+f.sim.psc <- function(x){
+  x %>%
+    rowwise() %>%
+    mutate(go = rbinom(1, 1, prob),
+           trip = if_else(go==1, rtruncnorm(1,0,7,day,sd.day), 0),
+           catch = if_else(trip==0, 0, 
+                           ifelse(p_fshy==1, 
+                                  rlnormTrunc(1, log(t), log(sd.t), 0, 140),
+                                  rtruncnorm(1, 0, 140, t, sd.t))),
+           salmon = ifelse(area==3, 0.32 * catch, 0.66 * catch)
+           n = if(trip==0) {1} else {trip},
+           c1 = if(area==1) {catch} else {0},
+           c2 = if(area==2) {catch} else {0},
+           c3 = if(area==3) {catch} else {0},
+           s1 = if(area==1) {salmon} else {0},
+           s2 = if(area==2) {salmon} else {0},
+           s3 = if(area==3) {salmon} else {0}) %>%
+    dplyr::select(p_fshy, area, port, deli, p_holder, season, days, sim, t, sd.t, day, 
+                  sd.day, C1, C2, C3, S1, S2, S3, prob, n, c1, c2, c3, s1, s2, s3, trip, catch) 
+}
+f.sim2.psc <- function(x){
+  x %>%
+    rowwise() %>%
+    mutate(go = rbinom(1, 1, prob),
+           trip = if_else(go==1, rtruncnorm(1,0,7,day,sd.day), 0),
+           catch = if_else(trip==0, 0, 
+                           ifelse(p_fshy==1, 
+                                  rlnormTrunc(1, log(t), log(sd.t), 0, 140),
+                                  rtruncnorm(1, 0, 140, t, sd.t))),
+           n = if_else(trip==0, n + 1, trip + n),
+           c1 = if(area==1) {catch} else {0},
+           c2 = if(area==2) {catch} else {0},
+           c3 = if(area==3) {catch} else {0},
+           s1 = if(area==1) {salmon} else {0},
+           s2 = if(area==2) {salmon} else {0},
+           s3 = if(area==3) {salmon} else {0}) %>%
+    dplyr::select(p_fshy, area, port, deli, p_holder, season, days, sim, t, sd.t, day,
+                  sd.day, C1, C2, C3, S1, S2, S3, prob, n, c1, c2, c3,  s1, s2, s3, trip, catch)
+}
+fun.reps.psc <- function(x){
+  
+  f.search_psc <- function(x){
+    s = if(c1<C1 && c2<C2 && c3<C3 && x[20]<x[7] && s1<S1 && s2<S2 && s3<S3){
+      f.a123(x)
+    } else if(c1<C1 && c2<C2 && c3>=C3 && x[20]<x[7] | s1<S1 && s2<S2 && s3>=S3){
+      f.a12(x)
+    } else if(c1<C1 && c2>=C2 && c3>=C3 && x[20]<x[7] | s1<S1 && s2>=S2 && s3>=S3){
+      f.a1(x)
+    } else if(c1>=C1 && c2<C2 && c3>=C3 && x[20]<x[7] | s1>=S1 && s2<S2 && s3>=S3){
+      f.a2(x)
+    } else if(c1>=C1 && c2>=C2 && c3<C3 && x[20]<x[7] | s1>=S1 && s2>=S2 && s3<S3){
+      f.a3(x)
+    } else if(c1<C1 && c2>=C2 && c3<C3 && x[20]<x[7] | s1<S1 && s2>=S2 && s3<S3){
+      f.a13(x)
+    } else if(c1>=C1 && c2<C2 && c3<C3 && x[20]<x[7] | s1>=S1 && s2<S2 && s3<S3){
+      f.a23(x)
+    } else if(x[20]>=x[7]){
+      c(9,1,1,1)
+    } else{c(9,1,1,1)}
+    names(s) <- c('p_fshy', 'area', 'port', 'deli')
+    s
+  }
+  
+  
+  l = replicate(nrow(x),vector('list',83)) # storage list
+  x = f.sim.psc(x) # function (uses dplyr code to calculate a suite of variables)
+  
+  # add data to storage list
+  for(i in 1:nrow(x)){
+    l[[1,i]] = x[i,]
+  }
+  
+  # basic control levels - work for 
+  C1 = as.numeric(x[1,13]) * 0.90  # limit value
+  C2 = as.numeric(x[1,14]) * 0.90  # limit value
+  C3 = as.numeric(x[1,15]) * 0.70  # limit value
+  S1 = as.numeric(x[1,16]) * 0.90  # limit value
+  S2 = as.numeric(x[1,17]) * 0.90  # limit value
+  S3 = as.numeric(x[1,18]) * 0.70  # limit value
+  
+  
+  c1 = sum(x[,21]) # control value
+  c2 = sum(x[,22]) # control value
+  c3 = sum(x[,23]) # control value
+  s1 = sum(x[,24]) # control value
+  s2 = sum(x[,25]) # control value
+  s3 = sum(x[,26]) # control value
+  
+  y = x[,5:20] # store descriptor values
+  s = as.data.frame(t(apply(x,1,f.search_psc))) # function to run a grid search based upon the limit and controls
+  x = bind_cols(s,y) # create a whole dataset
+  
+  
+  for(j in 2:83){
+    x = f.sim2.psc(x) # run the second trip function (same as 1st just updates # of days)
+    
+    # add data to  storagelist
+    for(i in 1:nrow(x)){ 
+      l[[j,i]]=x[i,]
+    }
+    c1 = sum(x[,21]) + c1 # control value update
+    c2 = sum(x[,22]) + c2 # control value update
+    c3 = sum(x[,23]) + c3 # control value update
+    s1 = sum(x[,24]) + s1 # control value update
+    s2 = sum(x[,25]) + s2 # control value update
+    s3 = sum(x[,26]) + s3 # control value update
+    y = x[,5:20] # store descriptor values
+    
+    s = as.data.frame(t(apply(x,1,f.search_psc))) # gridsearch
+    x = bind_cols(s,y)
+    if(x[1]==9) break
+  }
+  l
+}
+f.itall <- function(x){
+  x = lapply(x, fun.reps.psc)
+  x = lapply(x, f.docall)
+  x = do.call(bind_rows,x)
+  names(x) = c('size', 'area', 'p', 'd', 'p_holder', 'season','days','sim', 't', 'sd.t',
+               'day','sd.day', 'C1','C2', 'C3', 'S1', 'S2', 'S3', 'prob', 'n', 'c1', 'c2', 'c3', 's1', 's2', 's3','trip', 'catch')
+  x = filter(x, size<9)
+  x
+}
+
