@@ -5,7 +5,7 @@
 - [ ] ifq
     - [ ] open-access
     - [ ] llp - equal catch-shares
-- [ ] community quota allocation
+- [x] community quota allocation
     - [x] open-access
     - [x] llp - small vessel  
     - [x] llp - super exclusive 
@@ -13,6 +13,6 @@
     - [ ] open-access
     - [ ] llp - small vessel  
     - [ ] llp - super exclusive 
-- [ ] PSC allocation
-    - [ ] llp - super exclusive 
-    - [ ] llp - equal catch-shares 
+- [x] PSC allocation
+    - [x] llp - super exclusive 
+    - [x] llp - equal catch-shares 
