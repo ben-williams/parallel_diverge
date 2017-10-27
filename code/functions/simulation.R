@@ -481,7 +481,7 @@ f.sim.psc <- function(x){
                            ifelse(p_fshy==1, 
                                   rlnormTrunc(1, log(t), log(sd.t), 0, 140),
                                   rtruncnorm(1, 0, 140, t, sd.t))),
-           salmon = ifelse(area==3, 0.32 * catch, 0.66 * catch)
+           salmon = ifelse(area==3, 0.32 * catch, 0.66 * catch),
            n = if(trip==0) {1} else {trip},
            c1 = if(area==1) {catch} else {0},
            c2 = if(area==2) {catch} else {0},
@@ -501,6 +501,7 @@ f.sim2.psc <- function(x){
                            ifelse(p_fshy==1, 
                                   rlnormTrunc(1, log(t), log(sd.t), 0, 140),
                                   rtruncnorm(1, 0, 140, t, sd.t))),
+           salmon = ifelse(area==3, 0.32 * catch, 0.66 * catch),
            n = if_else(trip==0, n + 1, trip + n),
            c1 = if(area==1) {catch} else {0},
            c2 = if(area==2) {catch} else {0},
@@ -514,26 +515,40 @@ f.sim2.psc <- function(x){
 fun.reps.psc <- function(x){
   
   f.search_psc <- function(x){
-    s = if(c1<C1 && c2<C2 && c3<C3 && x[20]<x[7] && s1<S1 && s2<S2 && s3<S3){
+    
+    
+    s = if(c1<C1 && c2<C2 && c3<C3 && s1<S1 && s2< S2 && s3<S3 && x[20]<x[7]){
       f.a123(x)
-    } else if(c1<C1 && c2<C2 && c3>=C3 && x[20]<x[7] | s1<S1 && s2<S2 && s3>=S3){
+    } else if(c1< C1 && c2< C2 && c3>=C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3< S3 ||
+              c1< C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3>=S3){
       f.a12(x)
-    } else if(c1<C1 && c2>=C2 && c3>=C3 && x[20]<x[7] | s1<S1 && s2>=S2 && s3>=S3){
+    } else if(c1< C1 && c2>=C2 && c3>=C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3< S3 || 
+              c1< C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2>=S2 && s3>=S3 ||
+              c1< C1 && c2< C2 && c3>=C3 && x[20]<x[7] && s1< S1 && s2>=S2 && s3< S3 ||
+              c1< C1 && c2>=C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3>=S3){
       f.a1(x)
-    } else if(c1>=C1 && c2<C2 && c3>=C3 && x[20]<x[7] | s1>=S1 && s2<S2 && s3>=S3){
+    } else if(c1>=C1 && c2>=C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3< S3 || 
+              c1< C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1>=S1 && s2>=S2 && s3< S3 ||
+              c1>=C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2>=S2 && s3< S3 ||
+              c1< C1 && c2>=C2 && c3< C3 && x[20]<x[7] && s1>=S1 && s2< S2 && s3< S3){
       f.a2(x)
-    } else if(c1>=C1 && c2>=C2 && c3<C3 && x[20]<x[7] | s1>=S1 && s2>=S2 && s3<S3){
+    } else if(c1>=C1 && c2>=C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3< S3 || 
+              c1< C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1>=S1 && s2>=S2 && s3< S3 ||
+              c1>=C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2>=S2 && s3< S3 ||
+              c1< C1 && c2>=C2 && c3< C3 && x[20]<x[7] && s1>=S1 && s2< S2 && s3< S3){
       f.a3(x)
-    } else if(c1<C1 && c2>=C2 && c3<C3 && x[20]<x[7] | s1<S1 && s2>=S2 && s3<S3){
+    } else if(c1< C1 && c2>=C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3< S3 || 
+              c1< C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2>=S2 && s3< S3){
       f.a13(x)
-    } else if(c1>=C1 && c2<C2 && c3<C3 && x[20]<x[7] | s1>=S1 && s2<S2 && s3<S3){
+    } else if(c1>=C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1< S1 && s2< S2 && s3< S3 || 
+              c1< C1 && c2< C2 && c3< C3 && x[20]<x[7] && s1>=S1 && s2< S2 && s3< S3){
       f.a23(x)
     } else if(x[20]>=x[7]){
       c(9,1,1,1)
     } else{c(9,1,1,1)}
-    names(s) <- c('p_fshy', 'area', 'port', 'deli')
-    s
-  }
+  names(s) <- c('p_fshy', 'area', 'port', 'deli')
+  s
+}
   
   
   l = replicate(nrow(x),vector('list',83)) # storage list
@@ -550,8 +565,7 @@ fun.reps.psc <- function(x){
   C3 = as.numeric(x[1,15]) * 0.70  # limit value
   S1 = as.numeric(x[1,16]) * 0.90  # limit value
   S2 = as.numeric(x[1,17]) * 0.90  # limit value
-  S3 = as.numeric(x[1,18]) * 0.70  # limit value
-  
+  S3 = as.numeric(x[1,18]) * 0.90  # limit value
   
   c1 = sum(x[,21]) # control value
   c2 = sum(x[,22]) # control value
@@ -586,7 +600,7 @@ fun.reps.psc <- function(x){
   }
   l
 }
-f.itall <- function(x){
+f.itall.psc <- function(x){
   x = lapply(x, fun.reps.psc)
   x = lapply(x, f.docall)
   x = do.call(bind_rows,x)
