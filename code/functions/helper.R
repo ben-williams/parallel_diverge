@@ -22,7 +22,7 @@ options(digits=4)
 options(scipen=999)
 
 # data ----
-Catch <- read_csv('data/Catch.csv') # Simulated TAC data
+# Catch <- read_csv('data/Catch.csv') # Simulated TAC data
 pol <- read_csv('data/pol.csv') # CFEC data
 
 app <- read_csv('data/apportion.csv')
