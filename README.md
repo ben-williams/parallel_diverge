@@ -1,9 +1,9 @@
-# sims 1-20
+**sims 1-20**
 - [x] status quo - state and federal waters llp
 
-# scenario matchup - (fed/state) sims 21-150
+**scenario matchup - (fed/state) sims 21-150**
 
-Bounding scenarios  
+**Bounding scenarios**  
 - [ ] ifq
     - [ ] open-access
     - [ ] llp - equal catch-shares
@@ -13,7 +13,7 @@ Bounding scenarios
     - [x] llp - super exclusive  
     - [x] llp - equal catch-shares      
     
-Likely scenarios
+**Likely scenarios**  
 - [x] community quota allocation
     - [x] llp - small vessel  
     - [x] llp - super exclusive 
