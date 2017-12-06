@@ -7,9 +7,9 @@
 
 # load ----
 library(tidyverse)
-theme_set(theme_bw(base_size=11)+ 
-            theme(panel.grid.major = element_blank(),
-                  panel.grid.minor = element_blank()))
+theme_set(theme_bw(base_size = 11)+ 
+          theme(panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank()))
 library(lubridate)
 library(truncnorm)
 library(NMOF)
@@ -18,6 +18,7 @@ library(splitstackshape)
 library(MASS)
 library(EnvStats)
 library(gridExtra)
+library(rlist)
 options(digits=4)
 options(scipen=999)
 
@@ -39,9 +40,14 @@ abc.fed <- data.frame(abc = rep(50000 * 0.75, 150), sim = 1:150)
 abc <- data.frame(abc = rep(50000, 150), sim = 1:150)
 salmon.fed <- data.frame(salmon = 25000, sim = 1:150)
 
+# ABC is set at random draw
+abc.rand <- data.frame(abc = rnorm(40, 37500, 10000), sim = 1:40)
+abc.state.rand <- abc.rand %>% mutate(abc = abc * 0.25)
+abc.fed.rand <- abc.rand %>% mutate(abc = abc * 0.75)
+
 
 # create a data.frame of vessel sizes, ports, and season for simulating complete data sets
-all.boat <- expand.grid(p_fshy = 1:4, port=1:4, season=1:4, area = 1:3) # dataframe for making a complete grid
+all.boat <- expand.grid(p_fshy = 1:4, port = 1:4, season = 1:4, area = 1:3) # dataframe for making a complete grid
 
 # cleanup ----
 #cleanup function for after simulation is run
@@ -81,15 +87,16 @@ f.check.port <- function(x){
                           ifelse(key=="c2" & key2=="C2", catch, 
                                  ifelse(key=='c3' & key2=='C3', catch, NA))),
            Port = factor(d)) %>% 
-    ggplot(aes(TAC, catch, color=Port)) + geom_point() + geom_abline(slope=1, lty=4)
+    ggplot(aes(TAC, catch, color = Port)) + geom_point() + 
+      geom_abline(slope = 1, lty = 4)
 }
 
 f.check.individual <- function(x){
   x %>% 
     group_by(season, p_holder, sim, d) %>% 
-    summarise(c1 = sum(c1), C1=mean(C1),
-              c2 = sum(c2), C2=mean(C2),
-              c3 = sum(c3), C3=mean(C3)) %>%
+    summarise(c1 = sum(c1), C1 = mean(C1),
+              c2 = sum(c2), C2 = mean(C2),
+              c3 = sum(c3), C3 = mean(C3)) %>%
     # mutate(c1 = ifelse(area==1, c1, NA),
     #        c2 = ifelse(area==2, c2, NA),
     #        c3 = ifelse(area==3, c3, NA)) %>%
@@ -99,7 +106,8 @@ f.check.individual <- function(x){
           #                ifelse(key=="c2" & key2=="C2", catch, 
           #                       ifelse(key=='c3' & key2=='C3', catch, NA))),
            Port = factor(d)) %>% 
-    ggplot(aes(TAC, catch, color=Port)) + geom_jitter(width=10) + geom_abline(slope=1, lty=4)
+    ggplot(aes(TAC, catch, color = Port)) + geom_jitter(width = 10) + 
+      geom_abline(slope = 1, lty = 4)
 }
 
 
@@ -108,7 +116,7 @@ f.simcheck <- function(x, a){
   x %>% 
     group_by(sim, season, d) %>% 
     summarise(catch = sum(catch)) %>% 
-    dplyr::select(sim, season, port=d, catch)-> temp
+    dplyr::select(sim, season, port = d, catch) -> temp
   
   pol %>% 
     filter(g_pounds>2200, year==a) %>% 
@@ -116,6 +124,7 @@ f.simcheck <- function(x, a){
     summarise(t = sum(ton)) %>% 
     left_join(temp) %>% 
     mutate(Port = factor(port)) %>% 
-    ggplot(aes(t, catch, color=Port)) + geom_point() + geom_abline(slope=1, lty=4)
+    ggplot(aes(t, catch, color = Port)) + geom_point() + 
+      geom_abline(slope = 1, lty = 4)
   
 }
