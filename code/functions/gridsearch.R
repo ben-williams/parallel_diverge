@@ -18,9 +18,6 @@ f.penalty <- function(x){
      area==3 & port==3 & deli==2|
      area==3 & port==3 & deli==3|
      area==3 & port==4 & deli==4) {0}
-  else if(area==1 & port==2 & deli==1|
-          area==1 & port==3 & deli==1|
-          area==2 & port==1 & deli==1) {0.5}
   else if(area==2 & port==1 & deli==2|
           area==2 & port==1 & deli==3|
           area==2 & port==2 & deli==1|
@@ -45,7 +42,8 @@ f.penalty <- function(x){
           area==1 & port==3 & deli==4|
           area==1 & port==4 & deli==4|
           area==2 & port==4 & deli==4|
-          area==3 & port==1 & deli==1) {3} else {1}
+          area==3 & port==1 & deli==1) {3} 
+  else {1}
 }
 f.gridfuel <- function(x, penalty){
   #assumed days to catch 100 t fish
