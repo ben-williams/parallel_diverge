@@ -26,6 +26,7 @@ EXV <- 0.13
 TEXV <- round(0.12 * 2204.62)
 FUEL <- 0.00
 
+status_quo = f.rev(status_quo, EXV, FUEL)
 sq = f.rev(sq, EXV, FUEL)
 state_ecs = f.rev(state_ecs, EXV, FUEL)
 cq_fed = f.rev(cq_fed, EXV, FUEL)
@@ -39,7 +40,7 @@ ifq_fed = f.rev(ifq_fed, EXV, FUEL)
 head(ifq_fed)
 
 
-sq %>% 
+status_quo %>% 
   mutate(group='sq') -> asq
 bind_rows(ifq_fed, state_superx) %>% 
   mutate(group='1c') -> a1c
@@ -64,7 +65,7 @@ bind_rows(psc, state_ecs) %>%
 
 bind_rows(asq, a1c, a1d, a2a, a2b, a2c, a3a, a3b, a3c, a4c, a4d) %>% 
   group_by(sim, d, season, group) %>%
-  summarise(rev = sum(n_rev/1000000)) %>%
+  summarise(cv = sd(n_rev) / mean(n_rev), rev = sum(n_rev/1000000)) %>%
   mutate(Port = factor(d))  -> dat
 
   ggplot(dat, aes(group, rev, fill = Port)) + geom_boxplot(color='gray') + 
