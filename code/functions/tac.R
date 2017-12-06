@@ -127,7 +127,8 @@ tac.fed.ifq <- function(){
     filter(sim >20, p_fshy>1) %>% 
     mutate(deli = port, area = if_else(port==1, 1, 3)) %>% 
     dplyr::select(p_holder, p_fshy, area, port, deli, season, days=tday, t, 
-                  sd.t, day, sd.day, sim, C1, C2, C3, prob) 
+                  sd.t, day, sd.day, sim, C1, C2, C3, prob) %>% 
+    drop_na
 }
 tac.all <- function(){
   app %>% 
@@ -283,6 +284,13 @@ tac.state.ecs <- function(){
   mutate(n = n(), C1 = C1/n,  C2 = C2/n, C3 = C3/n) %>% 
   dplyr::select(-n)
 }
+
+tac.state.ecs2 <- function(){
+  tac.state() %>% 
+    group_by(season, sim) %>% 
+    mutate(n = n(), CATCH = sum(mean(C1), mean(C2), mean(C3))/n) %>% 
+    dplyr::select(-n)
+}
 tac.state.sx <- function(){
   app %>% 
     ungroup %>% 
@@ -347,6 +355,7 @@ tac.fed.psc <- function(){
     dplyr::select(p_holder, p_fshy, area, port, deli, season, days=tday, t, 
                   sd.t, day, sd.day, sim, C1, C2, C3, S1, S2, S3, prob) 
 }
+
 
 # break into appropriate lists for simulations
 sim.season <- function(x) { 
