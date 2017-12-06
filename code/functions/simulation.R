@@ -726,8 +726,8 @@ f.itall.psc <- function(x){
 # IFQ ----
 f.sim.ifq <- function(x){
   x %>%
-    rowwise() %>%
-    mutate(go = rbinom(1, 1, prob),
+    rowwise %>% 
+       mutate(go = rbinom(1, 1, prob),
            trip = if_else(go==1, rtruncnorm(1,0,7,day,sd.day), 0),
            catch = if_else(trip==0, 0, 
                            ifelse(p_fshy==1, 
@@ -737,31 +737,33 @@ f.sim.ifq <- function(x){
            n = if(trip==0) {1} else {trip},
            c1 = if(area==1) {catch} else {0},
            c2 = if(area==2) {catch} else {0},
-           c3 = if(area==3) {catch} else {0},
-           c1 = ifelse(c1>C1, C1, c1),
-           c2 = ifelse(c2>C2, C2, c2),
-           c3 = ifelse(c3>C3, C3, c3)) %>%
+           c3 = if(area==3) {catch} else {0}) %>%
+    mutate(c1 = if_else(c1>=C1, C1, c1),
+           c2 = if_else(c2>=C2, C2, c2),
+           c3 = if_else(c3>=C3, C3, c3), 
+           homeport=port) %>% 
     dplyr::select(p_fshy, area, port, deli, p_holder, season, days, sim, t, sd.t, day, 
                   sd.day, C1, C2, C3, prob, n, c1, c2, c3, trip, catch) 
 }
+
 
 fun.reps.ifq <- function(x){
   
   f.search_all <- function(x){
     s = if(c1<C1 && c2<C2 && c3<C3 && x[17]<x[7] ){
-      f.a123(x)
+      f.a123pd(x)
     } else if(c1<C1 && c2<C2 && c3>=C3 && x[17]<x[7] ){
-      f.a12(x)
+      f.a12pd(x)
     } else if(c1<C1 && c2>=C2 && c3>=C3 && x[17]<x[7] ){
-      f.a1(x)
+      f.a1pd(x)
     } else if(c1>=C1 && c2<C2 && c3>=C3 && x[17]<x[7] ){
-      f.a2(x)
+      f.a2pd(x)
     } else if(c1>=C1 && c2>=C2 && c3<C3 && x[17]<x[7] ){
-      f.a3(x)
+      f.a3pd(x)
     } else if(c1<C1 && c2>=C2 && c3<C3 && x[17]<x[7] ){
-      f.a13(x)
+      f.a13pd(x)
     } else if(c1>=C1 && c2<C2 && c3<C3 && x[17]<x[7] ){
-      f.a23(x)
+      f.a23pd(x)
     } else if(x[17]>=x[7] ){
       c(9,1,1,1)
     } else{c(9,1,1,1)}
@@ -783,16 +785,13 @@ fun.reps.ifq <- function(x){
   C2 = if(x[1,14]<100) {x[1,14] * 0.75} else {x[1,14] * 0.95}  # limit value
   C3 = if(x[1,15]<100) {x[1,15] * 0.75} else {x[1,15] * 0.95}  # limit value
   
-  
   c1 = sum(x[,18]) # control value
   c2 = sum(x[,19]) # control value
   c3 = sum(x[,20]) # control value
 
-  
   y = x[,5:17] # store descriptor values
   s = as.data.frame(t(apply(x,1,f.search_all))) # function to run a grid search based upon the limit and controls
   x = bind_cols(s,y) # create a whole dataset
-  
   
   for(j in 2:83){
     x = f.sim2(x) # run the second trip function (same as 1st just updates # of days)
@@ -810,6 +809,7 @@ fun.reps.ifq <- function(x){
     x = bind_cols(s,y)
     if(x[1]==9) break
   }
+
   l
 }
 f.itall.ifq <- function(x){
