@@ -29,10 +29,10 @@ options(digits=4)
 options(scipen=999)
 
 # data ----
-# Catch <- read_csv('chapter_3/data/Catch.csv') # Simulated TAC data
-pol <- read_csv('chapter_3/data/pol.csv') # CFEC data
+# Catch <- read_csv('chapter_3/data/Catch.csv') # Simulated TAC data - no longer used
+# pol <- read_csv('data/pol.csv') # CFEC data
 
-app <- read_csv('chapter_3/data/apportion.csv')
+# app <- read_csv('data/apportion.csv')
 
 # Calculate distributions by area and season
 app %>%
