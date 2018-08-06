@@ -18,4 +18,7 @@ There are seven key **function** files used:
  6. model.R - bundles the previous functions so they can be easily called
  7. cleanup.R - is used to calculate the revenue from a trip
  
+ The **scenarios** folder has the simulation runs for each management scenario. The **80_10** folder identifies the global characteristics as fuel cost $0.80/l and assumed exvessel value \$0.10/pound. Each scenario is simulated 40 times on a fixed ABC and 5 times on a sequential ABC.
+ 
+The **evaluations** folder has folders for pulling in all the simulation results for the fixed ABC and sequential ABC models, calculating the revenue generated and plotting the results.
  
